@@ -4,8 +4,13 @@ WASDetchan's (Yaroslav Antipov) personal website for:
 - Persional projects
 
 ## Tech stack
+### Website  
 - Go + teml 
 - HTML, CSS
 - No database 
-- Deployment with Docker on Ubuntu VPS
+### Deployment  
+- Ubuntu VPS
+- Docker with docker compose
+- Caddy for HTTPS
+- Xray for advanced routing and proxying
 
