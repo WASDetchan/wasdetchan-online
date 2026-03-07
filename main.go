@@ -14,6 +14,11 @@ func main() {
 	}
 
 	http.HandleFunc("/hello", helloHandler)
-	log.Fatal(http.ListenAndServe(":80", nil))
-}
 
+	http.HandleFunc("/feed.yml", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "text/xml")
+		http.ServeFile(w, r, "/public/feed.yml")
+	})
+
+	log.Fatal(http.ListenAndServe(":8082", nil))
+}

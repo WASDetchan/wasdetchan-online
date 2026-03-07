@@ -1,5 +1,25 @@
 services:
+  caddy:
+    image: caddy:2.11.2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"      
+      - "443:443/udp"
+    volumes:
+      - $PWD/caddy:/etc/caddy
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
   app:
     ports: 
-    - 8082:80
+      - 8082:8082
     build: .
+    volumes:
+      - /public:/public
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,4 @@
+# change to an actual domain in production
+localhost {
+  reverse_proxy app:8082
+}
