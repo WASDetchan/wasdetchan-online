@@ -1,0 +1,6 @@
+services:
+  app:
+    image: golang:1.26
+    ports: 
+    - 8082:80
+    build: .
