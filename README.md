@@ -5,7 +5,7 @@ WASDetchan's (Yaroslav Antipov) personal website for:
 
 ## Tech stack
 ### Website  
-- Go + teml 
+- Go + templ 
 - HTML, CSS
 - No database 
 ### Deployment  

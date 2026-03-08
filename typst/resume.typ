@@ -65,7 +65,7 @@
     - PostgreSQL/SQLite database using Diesel ORM
     - React.js frontend
     - Available as both web and desktop app
-  - Deployment on a server running Ubuntu with Docker
+  - Deployment on a server running Ubuntu with Docker, Nginx for HTTPS
 ]
 
 #resume-entry(
@@ -83,7 +83,7 @@
     - C++ for embedded programming
   - Magaged complex asyncronous measurement workflows with feedback loops
   - Automated analyzis of the data, both on the microcontroller for quick result and on PC for better presizion and plotting
-  - Made changes in the hardware on request for quicker development cycles, eleminating unneccesary meeting
+  - Made changes in the hardware on request for quicker development cycles, eleminating unneccesary meetings
 ]
 
 = Projects
@@ -92,7 +92,6 @@
   title: "Bight - TUI spreadsheet",
   location: [#github-link("WASDetchan/bight.nvim") #github-link("WASDetchan/bight") ],
   date: "September 2025 - Present",
-  description: "Designer/Developer",
 )
 
 #resume-item[
@@ -110,26 +109,32 @@
 
 #resume-entry(
   title: "Personal website",
-  location: github-link("DeveloperPaul123/eventbus"),
-  date: "Sep. 2019 - Present",
-  description: "Designer/Developer",
+  location: github-link("WASDetchan/wasdetchan-online"),
+  date: "2026 - Present",
 )
 
 #resume-item[
-  - Designed and implemented an event bus library using C++17.
-  - Wrote detailed documentation and unit tests for the library and published it on Github.
+  Tech stack:
+  - Website:
+    - Go + teml 
+    - HTML, CSS
+    - No database 
+  - Deployment  
+    - Ubuntu VPS
+    - Docker with docker compose
+    - Caddy for HTTPS
+    - Xray for advanced routing and proxying
 ]
 
 #resume-entry(
-  title: "Game",
+  title: "Meteor Crusher game",
   location: github-link("WASDetchan/space_shuttle"),
   date: "2020 - 2021",
-  description: "Designer/Developer",
 )
 
 #resume-item[
-  - Designed and implemented an event bus library using C++17.
-  - Wrote detailed documentation and unit tests for the library and published it on Github.
+  - Custom game engine built up from pygame (SLD2 bindings for python)
+  - Heavy usage of OOP patterns for easier development
 ]
 
 #resume-entry(
