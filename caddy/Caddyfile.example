@@ -1,4 +1,7 @@
+{
+  https_port 8443 
+}
 # change to an actual domain in production
-localhost {
+wasdetchan.online {
   reverse_proxy app:8082
 }

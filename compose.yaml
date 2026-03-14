@@ -4,21 +4,36 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"      
-      - "443:443/udp"
+      - "8443:8443"
     volumes:
       - $PWD/caddy:/etc/caddy
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - proxy
     depends_on:
       - app
 
   app:
+    restart: unless-stopped
+    networks:
+      - proxy
     ports: 
       - 8082:8082
-    build: .
+    build: 
+      context: .
+      network: host
     volumes:
       - /public:/public
+
+networks:
+  proxy:
+    driver: bridge
+  ip6net:
+     enable_ipv6: true
+     ipam:
+       config:
+         - subnet: 2001:db8::/64
 
 volumes:
   caddy_data:

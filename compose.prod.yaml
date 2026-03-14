@@ -1,0 +1,13 @@
+services:
+  xray: 
+    image: teddysun/xray:26.2.6
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    networks:
+      - proxy
+      - ip6net
+    volumes:
+      - /usr/local/etc/xray:/etc/xray
+    depends_on:
+      - caddy
