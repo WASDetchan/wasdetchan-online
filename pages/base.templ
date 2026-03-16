@@ -1,0 +1,16 @@
+package pages 
+
+templ base() {
+	<!DOCTYPE html>
+	<html lang="en" class={ root() }>
+		<head>
+			<title>WASDetchan.online </title>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			@baseStyle()
+		</head>
+		<body class={ body() }>
+			{ children... }
+		</body>
+	</html>
+}

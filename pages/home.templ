@@ -1,23 +1,25 @@
 package pages
 
 templ Home() {
-	<div>
-		Hi, I am Yaroslav Antipov, aka WASDetchan, and this is my personal website.
-		<br/>
-		I am a Rust Software Developer, mostly specialized in web development and cli tools.
-		<br/>
-		Interesting links:
-		<list>
-			<li>
-				<a href="/public/resume.pdf">
-					My resume (pdf)
-				</a>
-			</li>
-			<li>
-				<a href="https://github.com/WASDetchan">
-					My github
-				</a>
-			</li>
-		</list>
-	</div>
+	@base() {
+		<div>
+			Hi, I am Yaroslav Antipov, aka WASDetchan, and this is my personal website.
+			<br/>
+			I am a Rust Software Developer, mostly specialized in web development and cli tools.
+			<br/>
+			Interesting links:
+			<list>
+				<li>
+					<a href="/public/resume.pdf">
+						My resume (pdf)
+					</a>
+				</li>
+				<li>
+					<a href="https://github.com/WASDetchan">
+						My github
+					</a>
+				</li>
+			</list>
+		</div>
+	}
 }
