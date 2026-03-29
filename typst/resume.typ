@@ -174,7 +174,7 @@
   (
     strong("Git"),
     strong("GitHub"),
-    strong("Linux (server and desktop)"),
+    strong("Linux (server and desktop, arch btw)"),
     strong("Docker"),
     strong("Competitive programming (Expert on Codeforces)"),
     "XTLS Xray",
@@ -202,6 +202,7 @@
     "Typst",
     "LaTeX",
     "Theoretical econommics",
+    "Tangerine taxidermy",
   ),
 )
 // spacing fix, not needed if you use `resume-skill-grid`
