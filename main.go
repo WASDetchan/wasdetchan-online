@@ -11,6 +11,7 @@ import (
 
 func main() {
 	http.Handle("/home", templ.Handler(pages.Home()))
+	http.Handle("/article", templ.Handler(pages.Article()))
 
 	home := pages.Home()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +29,7 @@ func main() {
 	})
 
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("/public"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/static"))))
 
 	log.Fatal(http.ListenAndServe(":8082", nil))
 }

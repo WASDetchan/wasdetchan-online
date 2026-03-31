@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: "everforest";
+}
+
+@plugin "daisyui/theme" {
+  name: "everforest";
+
+  --color-base-100: #2D353B;
+  --color-base-200: #343F44;
+  --color-base-300: #3D484D;
+  --color-base-content: #D3C6AA;
+
+  --color-primary: #A7C080;
+  --color-primary-content: #2D353B;
+
+  --color-secondary: #7FBBB3;
+  --color-secondary-content: #2D353B;
+
+  --color-accent: #D699B6;
+  --color-accent-content: #2D353B;
+
+  --color-neutral: #475258;
+  --color-neutral-content: #D3C6AA;
+
+  --color-info: #7FBBB3;
+  --color-info-content: #2D353B;
+
+  --color-success: #83C092;
+  --color-success-content: #2D353B;
+
+  --color-warning: #DBBC7F;
+  --color-warning-content: #2D353B;
+
+  --color-error: #E67E80;
+  --color-error-content: #2D353B;
+
+  --black: #2D353B;
+  --red: #E67E80;
+  --green: #A7C080;
+  --yellow: #DBBC7F;
+  --blue: #7FBBB3;
+  --magenta: #D699B6;
+  --cyan: #83C092;
+  --white: #859289;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="everforest"] {
+    --color-base-100: #FDF6E3;
+    --color-base-200: #F4F0D9;
+    --color-base-300: #EFEBD4;
+    --color-base-content: #5C6A72;
+
+    --color-primary: #8DA101;
+    --color-primary-content: #FDF6E3;
+
+    --color-secondary: #3A94C5;
+    --color-secondary-content: #FDF6E3;
+
+    --color-accent: #DF69BA;
+    --color-accent-content: #FDF6E3;
+
+    --color-neutral: #E0DCC7;
+    --color-neutral-content: #5C6A72;
+
+    --color-info: #3A94C5;
+    --color-info-content: #FDF6E3;
+
+    --color-success: #35A77C;
+    --color-success-content: #FDF6E3;
+
+    --color-warning: #DFA000;
+    --color-warning-content: #FDF6E3;
+
+    --color-error: #F85552;
+    --color-error-content: #FDF6E3;
+
+    --black: #5C6A72;
+    --red: #F85552;
+    --green: #8DA101;
+    --yellow: #DFA000;
+    --blue: #3A94C5;
+    --magenta: #DF69BA;
+    --cyan: #35A77C;
+    --white: #D3C6AA;
+  }
+}
+
+@layer base {
+  a:link {
+    color: var(--blue); 
+  }
+  a:visited {
+    color: var(--magenta); 
+  }
+}
+
+@source "${GOPATH}/pkg/mod/github.com/sebasvil20/templicons@*/i/*.{go,templ}";

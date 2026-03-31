@@ -1,16 +1,31 @@
 package pages 
 
+import "github.com/sebasvil20/templicons/tabler"
+
 templ base() {
 	<!DOCTYPE html>
-	<html lang="en" class={ root() }>
+	<html lang="en" data-theme="everforest">
 		<head>
+			<link href="/static/app.css" rel="stylesheet"/>
 			<title>WASDetchan.online </title>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			@baseStyle()
 		</head>
-		<body class={ body() }>
+		<body>
 			{ children... }
 		</body>
 	</html>
+}
+
+templ topBar() {
+	<div class="flex h-15 ">
+		<div class="h-full w-15 flex items-center justify-center">
+			<a href="/">
+				@tabler.Home()
+			</a>
+		</div>
+		<div class="h-full w-15 flex items-center justify-center">
+			<a href="/article">Article </a>
+		</div>
+	</div>
 }
