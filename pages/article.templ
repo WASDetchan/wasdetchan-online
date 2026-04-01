@@ -1,11 +1,14 @@
 package pages
 
-templ Article() {
+templ article() {
 	@base() {
 		@topBar()
-		<div style="flex: horizontal">
-			hi!
-			<button class="btn btn-primary">Money: 0</button>
+		<div class="flex">
+			<div class="w-60 bg-base-100"></div>
+			<div class="w-full bg-base-200 p-8">
+				{ children... }
+			</div>
+			<div class="w-60 bg-base-100"></div>
 		</div>
 	}
 }

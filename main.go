@@ -11,7 +11,7 @@ import (
 
 func main() {
 	http.Handle("/home", templ.Handler(pages.Home()))
-	http.Handle("/article", templ.Handler(pages.Article()))
+	// http.Handle("/article", templ.Handler(pages.Article()))
 
 	home := pages.Home()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

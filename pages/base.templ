@@ -1,6 +1,9 @@
 package pages 
 
-import "github.com/sebasvil20/templicons/tabler"
+import (
+	"github.com/sebasvil20/templicons/i"
+	"github.com/sebasvil20/templicons/tabler"
+)
 
 templ base() {
 	<!DOCTYPE html>
@@ -17,15 +20,25 @@ templ base() {
 	</html>
 }
 
+templ topBarItem() {
+	<div
+		class="h-12 w-16 mt-2 mb-2
+  flex items-center justify-center
+  border-l-2 first:border-l-0"
+	>
+		{ children... }
+	</div>
+}
+
 templ topBar() {
-	<div class="flex h-15 ">
-		<div class="h-full w-15 flex items-center justify-center">
+	<div class="flex border-b-2 ">
+		@topBarItem() {
 			<a href="/">
-				@tabler.Home()
+				@tabler.Home(i.Props{Size: "32"})
 			</a>
-		</div>
-		<div class="h-full w-15 flex items-center justify-center">
+		}
+		@topBarItem() {
 			<a href="/article">Article </a>
-		</div>
+		}
 	</div>
 }
