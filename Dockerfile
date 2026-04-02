@@ -7,6 +7,7 @@ RUN go mod download
 
 COPY *.go ./
 COPY pages/ ./pages/
+COPY auth/ ./auth/
 COPY *.templ ./
 
 RUN --mount=type=cache,target=/go/pkg/mod \
@@ -33,7 +34,10 @@ RUN npx @tailwindcss/cli -i css/app.css -o /static/app.css
 
 FROM ubuntu
 
+RUN apt-get update && apt-get install -y ca-certificates
+
 COPY --from=build /usr/local/bin/app /usr/local/bin/app 
 COPY --from=styles /static/app.css /static/app.css
+COPY ./.env /.env
 
 CMD ["/usr/local/bin/app"]

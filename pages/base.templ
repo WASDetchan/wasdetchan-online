@@ -1,6 +1,7 @@
 package pages 
 
 import (
+	"github.com/WASDetchan/wasdetchan-online/auth"
 	"github.com/sebasvil20/templicons/i"
 	"github.com/sebasvil20/templicons/tabler"
 )
@@ -20,25 +21,53 @@ templ base() {
 	</html>
 }
 
-templ topBarItem() {
+templ topBarItemLeft() {
 	<div
 		class="h-12 w-16 mt-2 mb-2
-  flex items-center justify-center
-  border-l-2 first:border-l-0"
+    flex items-center justify-center
+    border-l-2 first:border-l-0"
+	>
+		{ children... }
+	</div>
+}
+
+templ topBarItemRight() {
+	<div
+		class="h-12 w-16 mt-2 mb-2
+    flex items-center justify-center
+    border-r-2 last:border-r-0"
 	>
 		{ children... }
 	</div>
 }
 
 templ topBar() {
+	{{ user, user_exists := ctx.Value(auth.UserKey{}).(auth.AuthInfo) }}
 	<div class="flex border-b-2 ">
-		@topBarItem() {
+		@topBarItemLeft() {
 			<a href="/">
 				@tabler.Home(i.Props{Size: "32"})
 			</a>
 		}
-		@topBarItem() {
-			<a href="/article">Article </a>
+		<div class="w-full shrink flex items-center justify-center"></div>
+		@topBarItemRight() {
+			<a href="https://github.com/WASDetchan">
+				@tabler.BrandGithub(i.Props{Size: "32"})
+			</a>
 		}
+		<div
+			class="h-12 pl-2 pr-2 mt-2 mb-2 w-auto
+      flex items-center justify-center
+      border-r-2 last:border-r-0
+      "
+		>
+			<a href="/auth/github" class="text-nowrap whitespace-nowrap w-auto">
+				if !user_exists {
+					Log In / Sign Up
+				} else {
+					{ user.Username }
+				}
+			</a>
+		</div>
 	</div>
 }

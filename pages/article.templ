@@ -4,11 +4,11 @@ templ article() {
 	@base() {
 		@topBar()
 		<div class="flex">
-			<div class="w-60 bg-base-100"></div>
-			<div class="w-full bg-base-200 p-8">
+			<div class="w-0 xl:w-60 bg-base-100"></div>
+			<div class="flex-auto  bg-base-200 p-8">
 				{ children... }
 			</div>
-			<div class="w-60 bg-base-100"></div>
+			<div class="w-0 xl:w-60  bg-base-100"></div>
 		</div>
 	}
 }

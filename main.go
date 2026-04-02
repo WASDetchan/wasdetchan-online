@@ -2,34 +2,58 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"log"
 	"net/http"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+
+	"github.com/WASDetchan/wasdetchan-online/auth"
 	"github.com/WASDetchan/wasdetchan-online/pages"
 	"github.com/a-h/templ"
 )
 
+func makeContext(c *gin.Context) context.Context {
+	return context.WithValue(context.Background(), auth.UserKey{}, sessions.Default(c).Get(auth.AuthInfo{}))
+}
+
 func main() {
-	http.Handle("/home", templ.Handler(pages.Home()))
-	// http.Handle("/article", templ.Handler(pages.Article()))
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
-	home := pages.Home()
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-			return
-		}
+	key := make([]byte, 64)
+	rand.Read(key)
+	store := cookie.NewStore(key)
 
-		home.Render(context.Background(), w)
+	r := gin.Default()
+	r.Use(sessions.Sessions("session", store))
+
+	auth.RegisterAuth(r)
+
+	home := templ.Handler(pages.Home())
+	r.GET("/home", func(c *gin.Context) {
+		home.Component.Render(makeContext(c), c.Writer)
 	})
 
-	http.HandleFunc("/feed.yml", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "text/xml")
+	r.GET("/", func(c *gin.Context) {
+		home.Component.Render(makeContext(c), c.Writer)
+	})
+
+	r.GET("/feed.yml", func(ctx *gin.Context) {
+		ctx.Header("Content-Type", "text/xml")
+		w := ctx.Writer
+		r := ctx.Request
 		http.ServeFile(w, r, "/public/feed.yml")
 	})
 
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("/public"))))
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/static"))))
+	r.Static("/public/", "/public/")
+	r.Static("/static/", "/static/")
 
-	log.Fatal(http.ListenAndServe(":8082", nil))
+	r.Run(":8082")
+
 }
