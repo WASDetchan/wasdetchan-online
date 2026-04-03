@@ -13,6 +13,7 @@ import (
 
 	"github.com/WASDetchan/wasdetchan-online/auth"
 	"github.com/WASDetchan/wasdetchan-online/pages"
+	"github.com/WASDetchan/wasdetchan-online/repository"
 	"github.com/a-h/templ"
 )
 
@@ -23,8 +24,16 @@ func makeContext(c *gin.Context) context.Context {
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading .env file: %v", err)
+		return
 	}
+
+	db, err := repository.InitPostgres()
+	if err != nil {
+		log.Fatalf("Error initializing the database: %v", err)
+		return
+	}
+	defer db.Close()
 
 	key := make([]byte, 64)
 	rand.Read(key)

@@ -8,6 +8,7 @@ RUN go mod download
 COPY *.go ./
 COPY pages/ ./pages/
 COPY auth/ ./auth/
+COPY repository/ ./repository/
 COPY *.templ ./
 
 RUN --mount=type=cache,target=/go/pkg/mod \
@@ -39,5 +40,6 @@ RUN apt-get update && apt-get install -y ca-certificates
 COPY --from=build /usr/local/bin/app /usr/local/bin/app 
 COPY --from=styles /static/app.css /static/app.css
 COPY ./.env /.env
+COPY ./.env.postgres /.env.postgres
 
 CMD ["/usr/local/bin/app"]

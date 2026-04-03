@@ -2,3 +2,4 @@ caddy/Caddyfile
 node_modules
 public/*
 .env
+.env.postgres

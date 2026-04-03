@@ -14,17 +14,27 @@ services:
     depends_on:
       - app
 
+  database:
+    image: postgres:18
+    restart: unless-stopped
+    shm_size: 128mb
+    env_file: .env.postgres
+    ports:
+      - 5432:5432
+    networks:
+      - proxy
+
   app:
     restart: unless-stopped
     networks:
       - proxy
-    ports: 
-      - 8082:8082
     build: 
       context: .
       network: host
     volumes:
       - /public:/public
+    depends_on:
+      - database
 
 networks:
   proxy:
