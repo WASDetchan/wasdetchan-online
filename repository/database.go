@@ -2,9 +2,14 @@ package repository
 
 import (
 	"database/sql"
+	"embed"
+	"log"
 
-	"github.com/joho/godotenv"
 	"github.com/lib/pq"
+
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
 type databaseErrorString struct {
@@ -15,11 +20,34 @@ func (e databaseErrorString) Error() string {
 	return e.s
 }
 
-func InitPostgres() (*sql.DB, error) {
-	if err := godotenv.Load(".env.postgres"); err != nil {
-		return nil, databaseErrorString{"Error loading .env.postgres: " + err.Error()}
+//go:embed migrations/*.sql
+var migrationFiles embed.FS
+
+func migrateDB(db *sql.DB) error {
+	source, err := iofs.New(migrationFiles, "migrations")
+	if err != nil {
+		return err
 	}
 
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		return err
+	}
+
+	m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
+	if err != nil {
+		return err
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	} else if err == nil {
+		log.Println("Database migrated successfully.")
+	}
+	return nil
+}
+
+func InitPostgres() (*Queries, error) {
 	cfg, err := pq.NewConfig("")
 	if err != nil {
 		return nil, databaseErrorString{"Error creating postgres config: " + err.Error()}
@@ -37,5 +65,10 @@ func InitPostgres() (*sql.DB, error) {
 		return nil, databaseErrorString{"Error connecting to the database: " + err.Error()}
 	}
 
-	return db, nil
+	err = migrateDB(db)
+	if err != nil {
+		return nil, databaseErrorString{"Error migrating the database: " + err.Error()}
+	}
+
+	return New(db), nil
 }

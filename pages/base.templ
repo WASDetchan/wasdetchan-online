@@ -2,6 +2,7 @@ package pages
 
 import (
 	"github.com/WASDetchan/wasdetchan-online/auth"
+	"github.com/WASDetchan/wasdetchan-online/repository"
 	"github.com/sebasvil20/templicons/i"
 	"github.com/sebasvil20/templicons/tabler"
 )
@@ -42,7 +43,7 @@ templ topBarItemRight() {
 }
 
 templ topBar() {
-	{{ user, user_exists := ctx.Value(auth.UserKey{}).(auth.AuthInfo) }}
+	{{ user, user_exists := ctx.Value(auth.UserKey{}).(repository.User) }}
 	<div class="flex border-b-2 ">
 		@topBarItemLeft() {
 			<a href="/">
@@ -65,7 +66,7 @@ templ topBar() {
 				if !user_exists {
 					Log In / Sign Up
 				} else {
-					{ user.Username }
+					{ user.Name }
 				}
 			</a>
 		</div>

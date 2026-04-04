@@ -19,10 +19,13 @@ services:
     restart: unless-stopped
     shm_size: 128mb
     env_file: .env.postgres
-    ports:
-      - 5432:5432
     networks:
       - proxy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d wasdetchan"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     restart: unless-stopped
@@ -35,6 +38,8 @@ services:
       - /public:/public
     depends_on:
       - database
+    environment:
+      GIN_MODE: debug
 
 networks:
   proxy:

@@ -10,6 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/WASDetchan/wasdetchan-online/auth"
+	"github.com/WASDetchan/wasdetchan-online/repository"
 	"github.com/sebasvil20/templicons/i"
 	"github.com/sebasvil20/templicons/tabler"
 )
@@ -146,7 +147,7 @@ func topBar() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		user, user_exists := ctx.Value(auth.UserKey{}).(auth.AuthInfo)
+		user, user_exists := ctx.Value(auth.UserKey{}).(repository.User)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"flex border-b-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -226,9 +227,9 @@ func topBar() templ.Component {
 			}
 		} else {
 			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(user.Username)
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(user.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/base.templ`, Line: 68, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/base.templ`, Line: 69, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {

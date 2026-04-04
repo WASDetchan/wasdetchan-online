@@ -11,3 +11,7 @@ services:
       - /usr/local/etc/xray:/etc/xray
     depends_on:
       - caddy
+
+  app:
+    environment:
+      GIN_MODE: release

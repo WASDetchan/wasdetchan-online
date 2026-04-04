@@ -1,3 +1,6 @@
+//go:generate go tool templ generate
+//go:generate go tool sqlc generate
+
 package main
 
 import (
@@ -18,7 +21,7 @@ import (
 )
 
 func makeContext(c *gin.Context) context.Context {
-	return context.WithValue(context.Background(), auth.UserKey{}, sessions.Default(c).Get(auth.AuthInfo{}))
+	return context.WithValue(context.Background(), auth.UserKey{}, sessions.Default(c).Get(auth.UserKey{}))
 }
 
 func main() {
@@ -28,21 +31,22 @@ func main() {
 		return
 	}
 
-	db, err := repository.InitPostgres()
+	queries, err := repository.InitPostgres()
 	if err != nil {
 		log.Fatalf("Error initializing the database: %v", err)
 		return
 	}
-	defer db.Close()
 
 	key := make([]byte, 64)
 	rand.Read(key)
 	store := cookie.NewStore(key)
 
 	r := gin.Default()
+	r.SetTrustedProxies(nil)
+
 	r.Use(sessions.Sessions("session", store))
 
-	auth.RegisterAuth(r)
+	auth.RegisterAuth(r, queries)
 
 	home := templ.Handler(pages.Home())
 	r.GET("/home", func(c *gin.Context) {
