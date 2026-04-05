@@ -1,10 +1,13 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"embed"
+	"fmt"
 	"log"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/lib/pq"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -23,11 +26,24 @@ func (e databaseErrorString) Error() string {
 //go:embed migrations/*.sql
 var migrationFiles embed.FS
 
-func migrateDB(db *sql.DB) error {
+func migrateDB() error {
 	source, err := iofs.New(migrationFiles, "migrations")
 	if err != nil {
 		return err
 	}
+
+	cfg, err := pq.NewConfig("")
+	if err != nil {
+		return databaseErrorString{"Error creating postgres config: " + err.Error()}
+	}
+
+	c, err := pq.NewConnectorConfig(cfg)
+	if err != nil {
+		return databaseErrorString{"Error creating postgres connection: " + err.Error()}
+	}
+
+	db := sql.OpenDB(c)
+	defer db.Close()
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
@@ -48,24 +64,13 @@ func migrateDB(db *sql.DB) error {
 }
 
 func InitPostgres() (*Queries, error) {
-	cfg, err := pq.NewConfig("")
+	db, err := pgx.Connect(context.Background(), "")
+
 	if err != nil {
-		return nil, databaseErrorString{"Error creating postgres config: " + err.Error()}
+		return nil, fmt.Errorf("error connecting to database: %w", err)
 	}
 
-	c, err := pq.NewConnectorConfig(cfg)
-	if err != nil {
-		return nil, databaseErrorString{"Error creating postgres connection: " + err.Error()}
-	}
-
-	db := sql.OpenDB(c)
-
-	err = db.Ping()
-	if err != nil {
-		return nil, databaseErrorString{"Error connecting to the database: " + err.Error()}
-	}
-
-	err = migrateDB(db)
+	err = migrateDB()
 	if err != nil {
 		return nil, databaseErrorString{"Error migrating the database: " + err.Error()}
 	}
