@@ -1,14 +1,26 @@
 package pages
 
-templ article() {
-	@base() {
-		@topBar()
-		<div class="flex">
-			<div class="w-0 xl:w-60 bg-base-100"></div>
-			<div class="flex-auto  bg-base-200 p-8">
-				{ children... }
-			</div>
-			<div class="w-0 xl:w-60  bg-base-100"></div>
+import (
+	"github.com/dustin/go-humanize"
+	"time"
+)
+
+type ArticleInfo struct {
+	title  string
+	author string // TODO: author should be user id
+	date   time.Time
+}
+
+templ Article(info ArticleInfo) {
+	@page() {
+		<div class="flex flex-col">
+			<h1 class="text-6xl text-primary font-mono font-bold">{ info.title }</h1>
+			<h2 class="text-l pl-4 pb-4 mb-8 border-b-2">
+				<a href="" class="text-xl">{ info.author } </a>,
+				{ info.date.Local().Format("2006-01-02 15:04") }
+				( { humanize.Time( info.date.Local()) } )
+			</h2>
+			{ children... }
 		</div>
 	}
 }

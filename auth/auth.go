@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"crypto/rand"
-	"database/sql"
 	"encoding/gob"
 	"fmt"
 	"log"
@@ -13,6 +12,8 @@ import (
 	"github.com/WASDetchan/wasdetchan-online/repository"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+
+	"github.com/jackc/pgx/v5"
 
 	gsessions "github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -32,13 +33,12 @@ func getUser(q *repository.Queries, gothUser goth.User) (repository.User, bool, 
 	if user, err := q.GetUserWithEmail(ctx, gothUser.Email); err == nil {
 		return user, false, nil
 	} else {
-		if err != sql.ErrNoRows {
-			return repository.User{}, false, fmt.Errorf("Error getting user: %v", err)
-
+		if err != pgx.ErrNoRows {
+			return repository.User{}, false, fmt.Errorf("error getting user: %v", err)
 		}
 		user, err = q.CreateUser(ctx, repository.CreateUserParams{Name: gothUser.Name, Email: gothUser.Email})
 		if err != nil {
-			return repository.User{}, false, fmt.Errorf("Error creating user: %v", err)
+			return repository.User{}, false, fmt.Errorf("error creating user: %v", err)
 		}
 		return user, true, nil
 	}

@@ -1,0 +1,106 @@
+package pages
+
+import (
+	"bytes"
+	_ "embed"
+	"fmt"
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/formatters/html"
+	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/alecthomas/chroma/v2/styles"
+	"github.com/sebasvil20/templicons/tabler"
+	"log"
+)
+
+//go:embed everforest-dark.xml
+var everforestDark []byte
+
+//go:embed everforest-light.xml
+var everforestLight []byte
+
+var formatter = html.New(html.WithClasses(true), html.ClassPrefix("code_highlight_"))
+var style = styles.Register(chroma.MustNewXMLStyle(bytes.NewReader(everforestDark)))
+var styleLight = styles.Register(chroma.MustNewXMLStyle(bytes.NewReader(everforestLight)))
+
+func formatCode(source string, language string) (string, error) {
+	var buf bytes.Buffer
+
+	lexer := lexers.Get(language)
+
+	if lexer == nil {
+		lexer = lexers.Analyse(source)
+	}
+
+	if lexer == nil {
+		return "", fmt.Errorf("couldn't find lexer for \"%v\" (hint: use \"plaintext\" for text)", language)
+	}
+
+	it, err := lexer.Tokenise(nil, source)
+	if err != nil {
+		return "", nil
+	}
+
+	err = formatter.Format(&buf, style, it)
+	if err != nil {
+		return "", nil
+	}
+
+	return buf.String(), nil
+}
+
+templ Code(source string, language string) {
+	{{ buf, err := formatCode(source, language) }}
+	<div class="p-2 pl-4 bg-base-100">
+		@codeStyleHandle.Once() {
+			@codeStyle()
+		}
+		if err != nil {
+			<span class="text-l text-error">Couldn't highlight code: { err.Error() } </span>
+		} else {
+			<div class="flex h-2">
+				<span class="grow"></span>
+				<span class="flex-0 text-nowrap whitespace-nowrap text-secondary">
+					{ language }
+				</span>
+				<button
+					onclick={ templ.JSFuncCall("navigator.clipboard.writeText", source) }
+					class="flex-0 pl-1 pr-1 ml-1 mr-1 h-8 rounded text-secondary
+          cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none
+          transition-all duration-10 active:scale-95 active:bg-primary"
+				>
+					@tabler.Copy()
+				</button>
+			</div>
+			<div class="overflow-x-scroll ">
+				@templ.Raw(buf)
+			</div>
+		}
+	</div>
+}
+
+var codeStyleHandle = templ.NewOnceHandle()
+
+templ codeStyle() {
+	{{
+		var css, cssLight bytes.Buffer
+		err := formatter.WriteCSS(&css, style)
+		if err != nil {
+			log.Panic(err)
+		}
+		err = formatter.WriteCSS(&cssLight, styleLight)
+		if err != nil {
+			log.Panic(err)
+		}
+	}}
+	@templ.Raw(
+		fmt.Sprintf(`<style>
+    %v
+    @media (prefers-color-scheme: light) {
+    %v
+    }
+    </style>`,
+			css.String(),
+			cssLight.String(),
+		),
+	)
+}

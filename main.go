@@ -52,9 +52,13 @@ func main() {
 	r.GET("/home", func(c *gin.Context) {
 		home.Component.Render(makeContext(c), c.Writer)
 	})
-
 	r.GET("/", func(c *gin.Context) {
 		home.Component.Render(makeContext(c), c.Writer)
+	})
+
+	article := templ.Handler(pages.HelloWorld())
+	r.GET("/articles/hello_world", func(c *gin.Context) {
+		article.Component.Render(makeContext(c), c.Writer)
 	})
 
 	r.GET("/feed.yml", func(ctx *gin.Context) {

@@ -72,3 +72,16 @@ templ topBar() {
 		</div>
 	</div>
 }
+
+templ page() {
+	@base() {
+		@topBar()
+		<div class="flex">
+			<div class="w-0 xl:w-60 bg-base-100"></div>
+			<div class="flex-auto bg-base-200 p-8 max-w-screen">
+				{ children... }
+			</div>
+			<div class="w-0 xl:w-60  bg-base-100"></div>
+		</div>
+	}
+}
