@@ -3,5 +3,6 @@
 }
 # change to an actual domain in production
 localhost {
+  encode
   reverse_proxy app:8082
 }
