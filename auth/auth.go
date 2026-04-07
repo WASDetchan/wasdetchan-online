@@ -129,3 +129,7 @@ func RegisterAuth(r *gin.Engine, q *repository.Queries) {
 		}
 	})
 }
+
+func MakeAuthContext(ctx context.Context, c *gin.Context) context.Context {
+	return context.WithValue(ctx, UserKey{}, sessions.Default(c).Get(UserKey{}))
+}

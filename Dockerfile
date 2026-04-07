@@ -8,6 +8,7 @@ RUN go mod download
 COPY *.go ./
 COPY pages/ ./pages/
 COPY auth/ ./auth/
+COPY util/ ./util/
 COPY repository/ ./repository/
 COPY *.templ ./
 

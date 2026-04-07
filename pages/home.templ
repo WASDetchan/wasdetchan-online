@@ -1,24 +1,38 @@
 package pages
 
+import "github.com/sebasvil20/templicons/tabler"
+import "github.com/sebasvil20/templicons/i"
+
+templ homeListItem(link string, text string, icon func(...i.Props) templ.Component) {
+	<li class="flex flex-row items-center">
+		<div class="w-12">
+			<a href={ link }>
+				@icon(i.Props{
+					Size: "32",
+				})
+			</a>
+		</div>
+		<div>
+			<a href={ link }>
+				{ text }
+			</a>
+		</div>
+	</li>
+}
+
 templ Home() {
 	@page() {
+		<h1 class="text-6xl text-primary font-mono font-bold">Hi! I am WASDetchan. </h1>
 		<div>
-			Hi, I am Yaroslav Antipov, aka WASDetchan, and this is my personal website.
+			My name is Yaroslav Antipov, and this is my personal website.
 			<br/>
-			I am a Rust Software Developer, mostly specialized in web development and cli tools.
+			I am a Rust Software Developer mostly specialized in web development and cli tools.
 			<br/>
 			Interesting links:
-			<list>
-				<li>
-					<a href="/public/resume.pdf">
-						My resume (pdf)
-					</a>
-				</li>
-				<li>
-					<a href="https://github.com/WASDetchan">
-						My github
-					</a>
-				</li>
+			<list class="flex flex-col pl-8">
+				@homeListItem("/public/resume.pdf", "My resume", tabler.Pdf)
+				@homeListItem("https://github.com/WASDetchan", "My Github", tabler.BrandGithub)
+				@homeListItem("/articles", "My blog", tabler.Pencil)
 			</list>
 		</div>
 	}

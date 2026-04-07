@@ -1,0 +1,25 @@
+package articles
+
+import (
+	"github.com/WASDetchan/wasdetchan-online/pages"
+	"time"
+)
+
+func ThisWebsiteInfo() pages.ArticleInfo {
+	writeTime, _ := time.Parse("2006-01-02 15:04", "2026-04-07 15:59")
+	return pages.ArticleInfo{
+		"This Website",
+		"",
+		"WASDetchan",
+		writeTime,
+		time.Time{},
+		false,
+	}
+}
+
+templ ThisWebsite() {
+	@pages.Article(HelloWorldInfo()) {
+		This website is WASDetchan's personal website.
+		It
+	}
+}

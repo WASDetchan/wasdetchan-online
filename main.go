@@ -4,7 +4,6 @@
 package main
 
 import (
-	"context"
 	"crypto/rand"
 	"log"
 	"net/http"
@@ -15,13 +14,10 @@ import (
 
 	"github.com/WASDetchan/wasdetchan-online/auth"
 	"github.com/WASDetchan/wasdetchan-online/pages"
+	"github.com/WASDetchan/wasdetchan-online/pages/articles"
 	"github.com/WASDetchan/wasdetchan-online/repository"
-	"github.com/a-h/templ"
+	"github.com/WASDetchan/wasdetchan-online/util"
 )
-
-func makeContext(c *gin.Context) context.Context {
-	return context.WithValue(context.Background(), auth.UserKey{}, sessions.Default(c).Get(auth.UserKey{}))
-}
 
 func main() {
 	queries, err := repository.InitPostgres()
@@ -41,18 +37,12 @@ func main() {
 
 	auth.RegisterAuth(r, queries)
 
-	home := templ.Handler(pages.Home())
-	r.GET("/home", func(c *gin.Context) {
-		home.Component.Render(makeContext(c), c.Writer)
-	})
-	r.GET("/", func(c *gin.Context) {
-		home.Component.Render(makeContext(c), c.Writer)
-	})
+	util.ServeComponentAt("/home", pages.Home(), r)
+	util.ServeComponentAt("/", pages.Home(), r)
+	util.ServeComponentAt("/articles", pages.Articles(), r)
 
-	article := templ.Handler(pages.HelloWorld())
-	r.GET("/articles/hello_world", func(c *gin.Context) {
-		article.Component.Render(makeContext(c), c.Writer)
-	})
+	articles.HelloWorldInfo().Register(articles.HelloWorld(), r)
+	articles.ThisWebsiteInfo().Register(articles.ThisWebsite(), r)
 
 	r.GET("/feed.yml", func(ctx *gin.Context) {
 		ctx.Header("Content-Type", "text/xml")
