@@ -39,7 +39,5 @@ RUN apt-get update && apt-get install -y ca-certificates
 
 COPY --from=build /usr/local/bin/app /usr/local/bin/app 
 COPY --from=styles /static/app.css /static/app.css
-COPY ./.env /.env
-COPY ./.env.postgres /.env.postgres
 
 CMD ["/usr/local/bin/app"]
