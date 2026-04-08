@@ -8,8 +8,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Receipt struct {
+	UserID pgtype.UUID
+	Fpd    int64
+	Total  int64
+	Time   pgtype.Timestamp
+	Optype int16
+	Place  string
+}
+
 type User struct {
-	ID    pgtype.UUID
-	Name  string
-	Email string
+	ID      pgtype.UUID
+	Name    string
+	Email   string
+	IsAdmin bool
 }

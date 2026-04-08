@@ -11,26 +11,67 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createReceipt = `-- name: CreateReceipt :one
+INSERT INTO receipts(user_id, fpd, total, time, optype, place)
+VALUES($1, $2, $3, $4, $5, $6)
+RETURNING user_id, fpd, total, time, optype, place
+`
+
+type CreateReceiptParams struct {
+	UserID pgtype.UUID
+	Fpd    int64
+	Total  int64
+	Time   pgtype.Timestamp
+	Optype int16
+	Place  string
+}
+
+func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) (Receipt, error) {
+	row := q.db.QueryRow(ctx, createReceipt,
+		arg.UserID,
+		arg.Fpd,
+		arg.Total,
+		arg.Time,
+		arg.Optype,
+		arg.Place,
+	)
+	var i Receipt
+	err := row.Scan(
+		&i.UserID,
+		&i.Fpd,
+		&i.Total,
+		&i.Time,
+		&i.Optype,
+		&i.Place,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
-INSERT INTO users(name, email)
-VALUES($1, $2)
-RETURNING id, name, email
+INSERT INTO users(name, email, is_admin)
+VALUES($1, $2, $3)
+RETURNING id, name, email, is_admin
 `
 
 type CreateUserParams struct {
-	Name  string
-	Email string
+	Name    string
+	Email   string
+	IsAdmin bool
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email)
+	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email, arg.IsAdmin)
 	var i User
-	err := row.Scan(&i.ID, &i.Name, &i.Email)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.IsAdmin,
+	)
 	return i, err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
-
 DELETE
 FROM users
 WHERE id = $1
@@ -42,7 +83,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, name, email
+SELECT id, name, email, is_admin
 FROM users
 WHERE id = $1
 `
@@ -50,12 +91,17 @@ WHERE id = $1
 func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 	row := q.db.QueryRow(ctx, getUser, id)
 	var i User
-	err := row.Scan(&i.ID, &i.Name, &i.Email)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.IsAdmin,
+	)
 	return i, err
 }
 
 const getUserWithEmail = `-- name: GetUserWithEmail :one
-SELECT id, name, email
+SELECT id, name, email, is_admin
 FROM users
 WHERE email = $1
 `
@@ -63,12 +109,51 @@ WHERE email = $1
 func (q *Queries) GetUserWithEmail(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRow(ctx, getUserWithEmail, email)
 	var i User
-	err := row.Scan(&i.ID, &i.Name, &i.Email)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.IsAdmin,
+	)
 	return i, err
 }
 
+const listReceipts = `-- name: ListReceipts :many
+SELECT user_id, fpd, total, time, optype, place 
+FROM receipts
+WHERE user_id = $1
+ORDER BY time
+`
+
+func (q *Queries) ListReceipts(ctx context.Context, userID pgtype.UUID) ([]Receipt, error) {
+	rows, err := q.db.Query(ctx, listReceipts, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Receipt
+	for rows.Next() {
+		var i Receipt
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Fpd,
+			&i.Total,
+			&i.Time,
+			&i.Optype,
+			&i.Place,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
-SELECT id, name, email
+SELECT id, name, email, is_admin
 FROM users
 ORDER BY email
 `
@@ -82,7 +167,12 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 	var items []User
 	for rows.Next() {
 		var i User
-		if err := rows.Scan(&i.ID, &i.Name, &i.Email); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.IsAdmin,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -91,4 +181,15 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const makeAdmin = `-- name: MakeAdmin :exec
+UPDATE users 
+SET is_admin = TRUE
+WHERE email = $1
+`
+
+func (q *Queries) MakeAdmin(ctx context.Context, email string) error {
+	_, err := q.db.Exec(ctx, makeAdmin, email)
+	return err
 }

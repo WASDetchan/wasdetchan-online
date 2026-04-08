@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/WASDetchan/wasdetchan-online/core"
 	"github.com/WASDetchan/wasdetchan-online/repository"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -24,9 +25,80 @@ import (
 type AuthInfo struct {
 	Email    string
 	Username string
+	IsAdmin  bool
 }
 
 type UserKey struct{}
+
+func EnsureAuthenticated(c *gin.Context) {
+	user, _ := c.Get(UserKey{})
+	_, authenticated := user.(*repository.User)
+	if !authenticated {
+		c.Redirect(http.StatusTemporaryRedirect, "/auth")
+		c.Abort()
+		return
+	}
+	c.Next()
+}
+
+func RegisterAuth(r *gin.Engine, q *repository.Queries) {
+	gob.Register(repository.User{})
+	gob.Register(UserKey{})
+
+	r.Use(middleware)
+
+	key := make([]byte, 64)
+	rand.Read(key)
+	gothicStore := gsessions.NewCookieStore(key)
+	gothicStore.MaxAge(86400 * 30)
+	gothicStore.Options.Path = "/"
+	gothicStore.Options.HttpOnly = true
+	gothicStore.Options.Secure = true
+	gothic.Store = gothicStore
+
+	var providerNames []string
+	var providers []goth.Provider
+
+	if os.Getenv("GITHUB_KEY") != "" && os.Getenv("GITHUB_SECRET") != "" {
+		providerNames = append(providerNames, "github")
+		providers = append(providers,
+			github.New(
+				os.Getenv("GITHUB_KEY"),
+				os.Getenv("GITHUB_SECRET"),
+				fmt.Sprintf("%v/auth/github/callback", os.Getenv("URL")),
+			),
+		)
+	}
+
+	goth.UseProviders(providers...)
+
+	r.GET("/auth", func(c *gin.Context) { c.Redirect(http.StatusTemporaryRedirect, "/auth/github") })
+
+	r.GET("/auth/:provider/callback", func(c *gin.Context) {
+		if err := complpeteAuth(c, q); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+	})
+
+	r.GET("/auth/:provider", func(c *gin.Context) {
+		if err := complpeteAuth(c, q); err != nil {
+			beginAuth(c)
+			return
+		}
+	})
+}
+
+func middleware(c *gin.Context) {
+	user, loggedIn := sessions.Default(c).Get(UserKey{}).(repository.User)
+	var userPtr *repository.User = nil
+	if loggedIn {
+		userPtr = &user
+	}
+
+	core.PushContext(c, UserKey{}, userPtr)
+	c.Set(UserKey{}, userPtr)
+}
 
 func getUser(q *repository.Queries, gothUser goth.User) (repository.User, bool, error) {
 	ctx := context.Background()
@@ -36,7 +108,13 @@ func getUser(q *repository.Queries, gothUser goth.User) (repository.User, bool, 
 		if err != pgx.ErrNoRows {
 			return repository.User{}, false, fmt.Errorf("error getting user: %v", err)
 		}
-		user, err = q.CreateUser(ctx, repository.CreateUserParams{Name: gothUser.Name, Email: gothUser.Email})
+		user, err = q.CreateUser(ctx,
+			repository.CreateUserParams{
+				Name:    gothUser.Name,
+				Email:   gothUser.Email,
+				IsAdmin: IsOwner(gothUser.Email),
+			},
+		)
 		if err != nil {
 			return repository.User{}, false, fmt.Errorf("error creating user: %v", err)
 		}
@@ -84,52 +162,4 @@ func beginAuth(c *gin.Context) {
 	query.Add("provider", c.Param("provider"))
 	c.Request.URL.RawQuery = query.Encode()
 	gothic.BeginAuthHandler(c.Writer, c.Request)
-}
-
-func RegisterAuth(r *gin.Engine, q *repository.Queries) {
-	gob.Register(repository.User{})
-	gob.Register(UserKey{})
-
-	key := make([]byte, 64)
-	rand.Read(key)
-	gothicStore := gsessions.NewCookieStore(key)
-	gothicStore.MaxAge(86400 * 30)
-	gothicStore.Options.Path = "/"
-	gothicStore.Options.HttpOnly = true
-	gothicStore.Options.Secure = true
-	gothic.Store = gothicStore
-
-	var providerNames []string
-	var providers []goth.Provider
-
-	if os.Getenv("GITHUB_KEY") != "" && os.Getenv("GITHUB_SECRET") != "" {
-		providerNames = append(providerNames, "github")
-		providers = append(providers,
-			github.New(
-				os.Getenv("GITHUB_KEY"),
-				os.Getenv("GITHUB_SECRET"),
-				fmt.Sprintf("%v/auth/github/callback", os.Getenv("URL")),
-			),
-		)
-	}
-
-	goth.UseProviders(providers...)
-
-	r.GET("/auth/:provider/callback", func(c *gin.Context) {
-		if err := complpeteAuth(c, q); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-	})
-
-	r.GET("/auth/:provider", func(c *gin.Context) {
-		if err := complpeteAuth(c, q); err != nil {
-			beginAuth(c)
-			return
-		}
-	})
-}
-
-func MakeAuthContext(ctx context.Context, c *gin.Context) context.Context {
-	return context.WithValue(ctx, UserKey{}, sessions.Default(c).Get(UserKey{}))
 }

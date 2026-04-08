@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/WASDetchan/wasdetchan-online/core"
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/lib/pq"
 
@@ -76,4 +78,13 @@ func InitPostgres() (*Queries, error) {
 	}
 
 	return New(db), nil
+}
+
+type QueriesKey struct{}
+
+func Middleware(q *Queries) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		core.PushContext(c, QueriesKey{}, q)
+		c.Set(QueriesKey{}, q)
+	}
 }

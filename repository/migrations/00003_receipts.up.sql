@@ -1,0 +1,8 @@
+CREATE TABLE receipts(
+  user_id UUID NOT NULL REFERENCES users,
+  fpd BIGINT NOT NULL PRIMARY KEY,
+  total BIGINT NOT NULL,
+  time TIMESTAMP NOT NULL,
+  optype SMALLINT NOT NULL,
+  place TEXT NOT NULL
+);

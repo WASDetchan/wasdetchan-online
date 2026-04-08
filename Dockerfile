@@ -8,8 +8,10 @@ RUN go mod download
 COPY *.go ./
 COPY pages/ ./pages/
 COPY auth/ ./auth/
+COPY core/ ./core/
 COPY util/ ./util/
 COPY repository/ ./repository/
+COPY receipt/ ./receipt/
 COPY *.templ ./
 
 RUN --mount=type=cache,target=/go/pkg/mod \

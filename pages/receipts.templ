@@ -1,0 +1,57 @@
+package pages
+
+import (
+	"context"
+	"github.com/WASDetchan/wasdetchan-online/auth"
+	"github.com/WASDetchan/wasdetchan-online/repository"
+	"log"
+	"time"
+)
+
+templ receiptListItem(Link string, place string, total int64, date time.Time) {
+	<li class="flex flex-row items-center font-mono mb-2">
+		<div class="pr-4">
+			{ date.Local().Format("2006-01-02 15:04") }
+		</div>
+		<div class="pl-12 pr-4 border-l-2">
+			<span class="text-warning">{ place } </span>
+		</div>
+		<div class="grow"></div>
+		<div class="pl-12 border-l-2">
+			<span class="text-error">{ total } </span>
+		</div>
+	</li>
+}
+
+templ Receipts() {
+	{{
+		queries := ctx.Value(repository.QueriesKey{})
+		q := queries.(*repository.Queries)
+		user := ctx.Value(auth.UserKey{}).(*repository.User)
+
+		receipts, err := q.ListReceipts(context.Background(), user.ID)
+
+		if err != nil {
+			log.Panicf("error listing receipts: %v", err)
+		}
+	}}
+	@page() {
+		<div class="flex flex-col">
+			<h1 class="text-6xl text-primary font-mono font-bold">My Receipts </h1>
+			<h2 class="text-l pl-4 pb-4 mb-8 border-b-2">
+				User: { user.Name }
+			</h2>
+			<div class="text-l pl-8 pt-8 border-t-2">
+				<form action="" method="post">
+					<input type="text" name="qrraw" id="qrraw" required/>
+					<input type="submit" value="Add Receipt"/>
+				</form>
+			</div>
+			<list class="flex flex-col pl-8 pt-8 border-t-2">
+				for _, receipt := range receipts {
+					@receiptListItem(".", receipt.Place, receipt.Total, receipt.Time.Time)
+				}
+			</list>
+		</div>
+	}
+}

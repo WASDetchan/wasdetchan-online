@@ -1,13 +1,15 @@
 # WASDetchan.online
 WASDetchan's (Yaroslav Antipov) personal website for:  
 - Portfolio, CV
-- Persional projects
+- Persional projects and blog
 
 ## Tech stack
 ### Website  
-- Go + templ 
-- HTML, CSS
-- No database 
+- Go gin  
+- Templ  
+- HTML, CSS (TailwindCSS, DaisyUI)  
+- PostgreSQL (using sqlc + pgx, go-migrate)  
+- GitHub OAuth  
 ### Deployment  
 - Ubuntu VPS
 - Docker with docker compose

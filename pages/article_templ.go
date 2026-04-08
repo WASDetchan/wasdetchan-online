@@ -31,7 +31,7 @@ type ArticleInfo struct {
 
 var articles []ArticleInfo
 
-func (info ArticleInfo) Register(comp templ.Component, r *gin.Engine) error {
+func (info ArticleInfo) Register(comp templ.Component, r *gin.RouterGroup) error {
 	if info.Link == "" {
 		info.Link = slug.Make(info.Title)
 	}

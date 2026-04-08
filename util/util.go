@@ -1,19 +1,13 @@
 package util
 
 import (
-	"context"
-
-	"github.com/WASDetchan/wasdetchan-online/auth"
+	"github.com/WASDetchan/wasdetchan-online/core"
 	"github.com/a-h/templ"
 	"github.com/gin-gonic/gin"
 )
 
-func MakeContext(c *gin.Context) context.Context {
-	return auth.MakeAuthContext(context.Background(), c)
-}
-
-func ServeComponentAt(link string, comp templ.Component, r *gin.Engine) {
+func ServeComponentAt(link string, comp templ.Component, r *gin.RouterGroup) {
 	r.GET(link, func(c *gin.Context) {
-		comp.Render(auth.MakeAuthContext(context.Background(), c), c.Writer)
+		comp.Render(core.GetContext(c), c.Writer)
 	})
 }
