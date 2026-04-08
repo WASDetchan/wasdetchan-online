@@ -28,10 +28,10 @@ UPDATE users
 SET is_admin = TRUE
 WHERE email = $1;
 
--- name: CreateReceipt :one
+-- name: CreateReceipt :exec
 INSERT INTO receipts(user_id, fpd, total, time, optype, place)
 VALUES($1, $2, $3, $4, $5, $6)
-RETURNING *;
+ON CONFLICT DO NOTHING;
 
 -- name: ListReceipts :many
 SELECT * 

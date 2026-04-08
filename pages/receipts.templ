@@ -18,7 +18,7 @@ templ receiptListItem(Link string, place string, total int64, date time.Time) {
 		</div>
 		<div class="grow"></div>
 		<div class="pl-12 border-l-2">
-			<span class="text-error">{ total } </span>
+			<span class="text-error">-{ total / 100 }.{ total%100 / 10 }{ total%10 } </span>
 		</div>
 	</li>
 }
@@ -38,13 +38,28 @@ templ Receipts() {
 	@page() {
 		<div class="flex flex-col">
 			<h1 class="text-6xl text-primary font-mono font-bold">My Receipts </h1>
-			<h2 class="text-l pl-4 pb-4 mb-8 border-b-2">
+			<h2 class="text-l text-secondary pl-8 pb-4 texl-2xl">
 				User: { user.Name }
 			</h2>
-			<div class="text-l pl-8 pt-8 border-t-2">
-				<form action="" method="post">
-					<input type="text" name="qrraw" id="qrraw" required/>
-					<input type="submit" value="Add Receipt"/>
+			<div class="text-l  pt-4 pb-4 pl-8 pr-2 border-t-2 ">
+				<form action="" method="post" class="flex justify-center items-center">
+					<input
+						type="text"
+						name="qrraw"
+						id="qrraw"
+						class="
+            cursor-pointer ring-2 focus:ring-primary focus:outline-none
+            transition-all duration-10 active:scale-95 active:bg-primary 
+            grow"
+						required
+					/>
+					<input
+						type="submit"
+						class="flex-0 pl-2 pr-1 ml-1 mr-1 h-8
+            cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none
+            transition-all duration-10 active:scale-95 active:bg-primary"
+						value="Add Receipt"
+					/>
 				</form>
 			</div>
 			<list class="flex flex-col pl-8 pt-8 border-t-2">

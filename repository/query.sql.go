@@ -11,10 +11,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createReceipt = `-- name: CreateReceipt :one
+const createReceipt = `-- name: CreateReceipt :exec
 INSERT INTO receipts(user_id, fpd, total, time, optype, place)
 VALUES($1, $2, $3, $4, $5, $6)
-RETURNING user_id, fpd, total, time, optype, place
+ON CONFLICT DO NOTHING
 `
 
 type CreateReceiptParams struct {
@@ -26,8 +26,8 @@ type CreateReceiptParams struct {
 	Place  string
 }
 
-func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) (Receipt, error) {
-	row := q.db.QueryRow(ctx, createReceipt,
+func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) error {
+	_, err := q.db.Exec(ctx, createReceipt,
 		arg.UserID,
 		arg.Fpd,
 		arg.Total,
@@ -35,16 +35,7 @@ func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) (R
 		arg.Optype,
 		arg.Place,
 	)
-	var i Receipt
-	err := row.Scan(
-		&i.UserID,
-		&i.Fpd,
-		&i.Total,
-		&i.Time,
-		&i.Optype,
-		&i.Place,
-	)
-	return i, err
+	return err
 }
 
 const createUser = `-- name: CreateUser :one

@@ -29,6 +29,23 @@ func (d OtherError) Error() string {
 	return fmt.Sprintf("An error has occured (code %v). Try again later.", d.code)
 }
 
+type LocalTime struct {
+	time.Time
+}
+
+func (ct *LocalTime) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	t, err := time.Parse("2006-01-02T15:04:05", s)
+	if err != nil {
+		return fmt.Errorf("failed to parse time: %w", err)
+	}
+	*ct = LocalTime{t}
+	return nil
+}
+
 type ReceiptItem struct {
 	Name     string `json:"name"`
 	Nds      int64  `json:"nds"`
@@ -42,7 +59,7 @@ type Receipt struct {
 	RetailPlaceAddress string        `json:"retailPlaceAddress"`
 	RetailPlace        string        `json:"retailPlace"`
 	UserInn            string        `json:"userInn"`
-	TicketDate         time.Time     `json:"ticketDate"`
+	Time               LocalTime     `json:"dateTime"`
 	RequestNumber      int64         `json:"requestNumber"`
 	ShiftNumber        int64         `json:"shiftNumber"`
 	Operator           int64         `json:"operator"`
@@ -159,12 +176,12 @@ func HandlePostReceipt(c *gin.Context) {
 	q := queries.(*repository.Queries)
 	user_id := user.(*repository.User).ID
 
-	_, err = q.CreateReceipt(context.Background(), repository.CreateReceiptParams{
+	err = q.CreateReceipt(context.Background(), repository.CreateReceiptParams{
 		UserID: user_id,
 		Fpd:    data.FiscalSign,
 		Total:  data.TotalSum,
 		Time: pgtype.Timestamp{
-			Time:  data.TicketDate,
+			Time:  data.Time.Time,
 			Valid: true,
 		},
 		Place: data.RetailPlace,
@@ -175,9 +192,6 @@ func HandlePostReceipt(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, receiptPostOk{
-		0,
-		1,
-		data,
-	})
+	c.Redirect(http.StatusSeeOther, "/receipts")
+
 }

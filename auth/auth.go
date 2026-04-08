@@ -32,8 +32,8 @@ type UserKey struct{}
 
 func EnsureAuthenticated(c *gin.Context) {
 	user, _ := c.Get(UserKey{})
-	_, authenticated := user.(*repository.User)
-	if !authenticated {
+	userPtr, authenticated := user.(*repository.User)
+	if !authenticated || userPtr == nil {
 		c.Redirect(http.StatusTemporaryRedirect, "/auth")
 		c.Abort()
 		return
