@@ -113,7 +113,7 @@ const listReceipts = `-- name: ListReceipts :many
 SELECT user_id, fpd, total, time, optype, place 
 FROM receipts
 WHERE user_id = $1
-ORDER BY time
+ORDER BY time DESC
 `
 
 func (q *Queries) ListReceipts(ctx context.Context, userID pgtype.UUID) ([]Receipt, error) {

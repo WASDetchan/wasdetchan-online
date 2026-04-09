@@ -30,11 +30,24 @@ type AuthInfo struct {
 
 type UserKey struct{}
 
+type RedirectKey struct{}
+
+func RedirectToAuth(c *gin.Context) {
+	sess := sessions.Default(c)
+	sess.Set(RedirectKey{}, c.Request.URL.String())
+	if err := sess.Save(); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, "/auth")
+}
+
 func EnsureAuthenticated(c *gin.Context) {
 	user, _ := c.Get(UserKey{})
 	userPtr, authenticated := user.(*repository.User)
 	if !authenticated || userPtr == nil {
-		c.Redirect(http.StatusTemporaryRedirect, "/auth")
+		RedirectToAuth(c)
 		c.Abort()
 		return
 	}
@@ -44,6 +57,7 @@ func EnsureAuthenticated(c *gin.Context) {
 func RegisterAuth(r *gin.Engine, q *repository.Queries) {
 	gob.Register(repository.User{})
 	gob.Register(UserKey{})
+	gob.Register(RedirectKey{})
 
 	r.Use(middleware)
 
@@ -153,7 +167,13 @@ func complpeteAuth(c *gin.Context, q *repository.Queries) error {
 		log.Printf("Logged in as %v with %v", user, c.Param("provider"))
 	}
 
-	c.Redirect(http.StatusTemporaryRedirect, "/") // TODO: redirect to source
+	redirect, succ := session.Get(RedirectKey{}).(string)
+
+	if !succ || redirect == "" {
+		redirect = "/"
+	}
+
+	c.Redirect(http.StatusTemporaryRedirect, redirect)
 	return nil
 }
 

@@ -37,4 +37,4 @@ ON CONFLICT DO NOTHING;
 SELECT * 
 FROM receipts
 WHERE user_id = $1
-ORDER BY time ;
+ORDER BY time DESC;

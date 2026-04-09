@@ -47,11 +47,11 @@ func (ct *LocalTime) UnmarshalJSON(data []byte) error {
 }
 
 type ReceiptItem struct {
-	Name     string `json:"name"`
-	Nds      int64  `json:"nds"`
-	Price    int64  `json:"price"`
-	Quantity int64  `json:"quantity"`
-	Sum      int64  `json:"sum"`
+	Name     string  `json:"name"`
+	Nds      int64   `json:"nds"`
+	Price    int64   `json:"price"`
+	Quantity float64 `json:"quantity"`
+	Sum      int64   `json:"sum"`
 }
 
 type Receipt struct {
@@ -74,6 +74,10 @@ type Receipt struct {
 	EcashTotalSum      int64         `json:"ecashTotalSum"`
 	TaxationType       int8          `json:"taxationType"`
 	FiscalSign         int64         `json:"fiscalSign"`
+}
+
+type responseBase struct {
+	Code int `json:"code"`
 }
 
 type responseData struct {
@@ -109,6 +113,21 @@ func GetReceiptFromString(qrraw string) (*Receipt, string, error) {
 		return nil, "", fmt.Errorf("error requesting api: %v", err)
 	}
 
+	var base responseBase
+	err = json.Unmarshal(body, &base)
+	if err != nil {
+		log.Printf("API response: %s", body)
+		return nil, "", fmt.Errorf("error decoding response: %v", err)
+	}
+
+	if base.Code == 0 {
+		return nil, "", InvalidData{}
+	}
+
+	if base.Code > 1 {
+		return nil, "", OtherError{base.Code}
+	}
+
 	var data responseData
 	// err = json.NewDecoder(resp.Body).Decode(&data)
 	err = json.Unmarshal(body, &data)
@@ -116,14 +135,6 @@ func GetReceiptFromString(qrraw string) (*Receipt, string, error) {
 	if err != nil {
 		log.Printf("API response: %s", body)
 		return nil, "", fmt.Errorf("error decoding response: %v", err)
-	}
-
-	if data.Code == 0 {
-		return nil, "", InvalidData{}
-	}
-
-	if data.Code > 1 {
-		return nil, "", OtherError{data.Code}
 	}
 
 	return data.Data.Json, data.Data.Html, nil

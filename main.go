@@ -30,6 +30,12 @@ func main() {
 	key := make([]byte, 64)
 	rand.Read(key)
 	store := cookie.NewStore(key)
+	store.Options(sessions.Options{
+		Path:     "/",
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteDefaultMode,
+	})
 
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
