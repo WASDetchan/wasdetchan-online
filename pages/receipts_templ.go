@@ -64,7 +64,8 @@ func Receipts() templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		queries := ctx.Value(repository.QueriesKey{})
 		q := queries.(*repository.Queries)
-		user := ctx.Value(auth.UserKey{}).(*repository.User)
+		authInfo := ctx.Value(auth.AuthKey{}).(auth.AuthInfo)
+		user := authInfo.User
 
 		receipts, err := q.ListReceipts(context.Background(), user.ID)
 
@@ -75,8 +76,6 @@ func Receipts() templ.Component {
 		var receiptsByMonth []receiptsMonth
 		var currentMonth receiptsMonth
 		var currentDay string
-
-		log.Printf("#%v: %#v", len(receipts), receipts)
 
 		for _, receipt := range receipts {
 			firstOfMonth := false
@@ -130,13 +129,13 @@ func Receipts() templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(user.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 92, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 91, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</h2><div class=\"text-l pt-4 pb-4 pl-8 pr-2 border-t-2\"><form action=\"\" method=\"post\" class=\"flex justify-center items-center\"><input type=\"text\" name=\"qrraw\" id=\"qrraw\" class=\"cursor-pointer ring-2 focus:ring-primary focus:outline-none grow\" required> <input type=\"submit\" class=\"flex-0 ml-4 mr-4 h-8 pr-2 pl-2 focus:ring-2 focus:ring-primary focus:outline-none transition-all duration-10 active:scale-95 active:bg-primary\" value=\"Add Receipt\"></form></div><list class=\"flex flex-col pl-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</h2><div class=\"text-l pt-4 pb-4 pl-8 pr-2 border-t-2\"><form action=\"\" method=\"post\" class=\"flex justify-center items-center\"><input type=\"text\" name=\"qrraw\" id=\"qrraw\" class=\"ring-2 focus:ring-primary focus:outline-none grow\" required> <input type=\"submit\" class=\"flex-0 ml-4 mr-4 h-8 pr-2 pl-2 focus:ring-2 focus:ring-primary focus:outline-none cursor-pointer transition-all duration-10 active:scale-95 active:bg-primary\" value=\"Add Receipt\"></form><div id=\"form-error\" class=\"hidden h-4 mt-2 text-error\"></div><div id=\"form-warning\" class=\"hidden h-4 mt-2 text-warning\"></div><div id=\"form-success\" class=\"hidden h-4 mt-2 text-info\"></div><script>\n          document.querySelector('form').addEventListener('submit', async (e) => {\n            e.preventDefault(); \n\n            const response = await fetch('/receipts', {\n                method: 'POST',\n                body: new FormData(e.target),\n              });\n\n            const result = await response.json(); \n\n            const error = document.getElementById(\"form-error\")\n            const warning = document.getElementById(\"form-warning\")\n            const success = document.getElementById(\"form-success\")\n\n            error.classList.add(\"hidden\")\n            warning.classList.add(\"hidden\")\n            success.classList.add(\"hidden\")\n\n            if (result.code == 0) {\n              success.classList.remove(\"hidden\")\n              success.textContent = result.status\n            } else if (result.code == 8) {\n              warning.classList.remove(\"hidden\")\n              warning.textContent = result.status\n            } else {\n              error.classList.remove(\"hidden\")\n              error.textContent = result.status + \" (code \" + result.code + \")\"\n            }\n          }); \n        </script></div><list class=\"flex flex-col pl-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -148,7 +147,7 @@ func Receipts() templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(month.month)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 118, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 149, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -171,7 +170,7 @@ func Receipts() templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(month.formatTotal())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 127, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 158, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -229,7 +228,7 @@ func receiptListItem(data receiptData) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(data.time.Format("02"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 140, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 171, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -247,7 +246,7 @@ func receiptListItem(data receiptData) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(data.time.Format(" 15:04"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 144, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 175, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -260,7 +259,7 @@ func receiptListItem(data receiptData) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(data.fpd)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 147, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 178, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -273,7 +272,7 @@ func receiptListItem(data receiptData) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(data.place)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 148, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 179, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -286,7 +285,7 @@ func receiptListItem(data receiptData) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(data.formatTotal())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 152, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/receipts.templ`, Line: 183, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {

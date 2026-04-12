@@ -88,3 +88,11 @@ func Middleware(q *Queries) func(c *gin.Context) {
 		c.Set(QueriesKey{}, q)
 	}
 }
+
+func GetQueries(c *gin.Context) *Queries {
+	queries, succ := c.Get(QueriesKey{})
+	if !succ {
+		log.Panic("queries not available")
+	}
+	return queries.(*Queries)
+}

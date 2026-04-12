@@ -21,6 +21,11 @@ import (
 )
 
 func main() {
+	c1 := auth.Capabilities{auth.CapabilityReceiptRead, auth.CapabilityReceiptWrite}
+	b := c1.IntoBytes()
+	c2 := auth.Capabilities{}
+	c2.ReadBytes(b)
+	log.Print(c1, c2)
 	queries, err := repository.InitPostgres()
 	if err != nil {
 		log.Fatalf("Error initializing the database: %v", err)
@@ -62,9 +67,18 @@ func main() {
 		http.ServeFile(w, r, "/public/feed.yml")
 	})
 
-	authenticated := g.Group("/", auth.EnsureAuthenticated)
-	util.ServeComponentAt("/receipts", pages.Receipts(), authenticated)
-	authenticated.POST("/receipts", receipt.HandlePostReceipt)
+	readReceipt := g.Group("/", auth.EnsureAuthorized(auth.CapabilityReceiptRead))
+	util.ServeComponentAt("/receipts", pages.Receipts(), readReceipt)
+	g.POST("/receipts", auth.EnsureAuthorized(auth.CapabilityReceiptWrite), receipt.HandlePostReceipt)
+
+	g.GET("/token/receipt",
+		auth.EnsureAuthorized(
+			auth.CapabilityTokenManip,
+			auth.CapabilityReceiptRead,
+			auth.CapabilityReceiptWrite,
+		), func(c *gin.Context) {
+			auth.CreateToken(c, auth.CapabilityReceiptRead, auth.CapabilityReceiptWrite)
+		})
 
 	r.Static("/public/", "/public/")
 	r.Static("/static/", "/static/")

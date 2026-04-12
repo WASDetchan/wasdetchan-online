@@ -14,6 +14,7 @@ import (
 	"github.com/WASDetchan/wasdetchan-online/auth"
 	"github.com/WASDetchan/wasdetchan-online/repository"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -62,7 +63,7 @@ type Receipt struct {
 	Time               LocalTime     `json:"dateTime"`
 	RequestNumber      int64         `json:"requestNumber"`
 	ShiftNumber        int64         `json:"shiftNumber"`
-	Operator           int64         `json:"operator"`
+	Operator           string        `json:"operator"`
 	OperationType      int8          `json:"operationType"`
 	Items              []ReceiptItem `json:"items"`
 	Nds18              int64         `json:"nds18"`
@@ -140,15 +141,19 @@ func GetReceiptFromString(qrraw string) (*Receipt, string, error) {
 	return data.Data.Json, data.Data.Html, nil
 }
 
-type receiptPostError struct {
-	Code          int
-	ErrorString   string
-	AcceptedCount int
-}
-
-type receiptPostOk struct {
+// 0 - OK
+// 1..=6 - proverkacheka API error
+// 7 - Missing data
+// 8 - Duplicate
+// API errors:
+// 1 - чек некорректен,
+// 2 - данные чека пока не получены,
+// 3 - превышено кол-во запросов,
+// 4 - ожидание перед повторным запросом,
+// 5 - прочее (данные не получены)
+type receiptPostResponse struct {
 	Code    int      `json:"code"`
-	IsNew   int      `json:"isNew"`
+	Status  string   `json:"status"`
 	Receipt *Receipt `json:"receipt"`
 }
 
@@ -156,9 +161,9 @@ func HandlePostReceipt(c *gin.Context) {
 	qrraw := c.PostForm("qrraw")
 
 	if qrraw == "" {
-		c.JSON(http.StatusBadRequest, receiptPostError{
-			Code:        1,
-			ErrorString: InvalidData{}.Error(),
+		c.JSON(http.StatusBadRequest, receiptPostResponse{
+			Code:   7,
+			Status: "The form is missing the \"qrraw\" field",
 		})
 		return
 	}
@@ -167,14 +172,14 @@ func HandlePostReceipt(c *gin.Context) {
 	if err != nil {
 		switch err := err.(type) {
 		case OtherError:
-			c.JSON(http.StatusInternalServerError, receiptPostError{
-				Code:        err.code,
-				ErrorString: err.Error(),
+			c.JSON(http.StatusInternalServerError, receiptPostResponse{
+				Code:   err.code,
+				Status: err.Error(),
 			})
 		case InvalidData:
-			c.JSON(http.StatusBadRequest, receiptPostError{
-				Code:        1,
-				ErrorString: err.Error(),
+			c.JSON(http.StatusBadRequest, receiptPostResponse{
+				Code:   1,
+				Status: err.Error(),
 			})
 		default:
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -182,13 +187,11 @@ func HandlePostReceipt(c *gin.Context) {
 		return
 	}
 
-	user, _ := c.Get(auth.UserKey{})
-	queries, _ := c.Get(repository.QueriesKey{})
-	q := queries.(*repository.Queries)
-	user_id := user.(*repository.User).ID
+	userId := auth.AssertAuth(c).ID
+	q := repository.GetQueries(c)
 
-	err = q.CreateReceipt(context.Background(), repository.CreateReceiptParams{
-		UserID: user_id,
+	_, err = q.CreateReceipt(context.Background(), repository.CreateReceiptParams{
+		UserID: userId,
 		Fpd:    data.FiscalSign,
 		Total:  data.TotalSum,
 		Time: pgtype.Timestamp{
@@ -199,10 +202,22 @@ func HandlePostReceipt(c *gin.Context) {
 	})
 
 	if err != nil {
+		if err.(*pgconn.PgError).Code == "23505" {
+			c.JSON(http.StatusOK, receiptPostResponse{
+				Code:    8,
+				Status:  "The receipt was already registered",
+				Receipt: data,
+			})
+			return
+		}
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.Redirect(http.StatusSeeOther, "/receipts")
+	c.JSON(http.StatusOK, receiptPostResponse{
+		Code:    0,
+		Status:  "Accepted",
+		Receipt: data,
+	})
 
 }

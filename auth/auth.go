@@ -23,12 +23,24 @@ import (
 )
 
 type AuthInfo struct {
-	Email    string
-	Username string
-	IsAdmin  bool
+	User         *repository.User
+	Capabilities Capabilities
 }
 
-type UserKey struct{}
+func AssertAuth(c *gin.Context) *repository.User {
+	info := GetAuthInfo(c)
+	if info.User == nil {
+		log.Panic("authenticated assert failed")
+	}
+	return info.User
+}
+
+func GetAuthInfo(c *gin.Context) AuthInfo {
+	info, _ := c.Get(AuthKey{})
+	return info.(AuthInfo)
+}
+
+type AuthKey struct{}
 
 type RedirectKey struct{}
 
@@ -43,20 +55,32 @@ func RedirectToAuth(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/auth")
 }
 
-func EnsureAuthenticated(c *gin.Context) {
-	user, _ := c.Get(UserKey{})
-	userPtr, authenticated := user.(*repository.User)
-	if !authenticated || userPtr == nil {
-		RedirectToAuth(c)
-		c.Abort()
-		return
+func EnsureAuthorized(capabilities ...Capability) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		log.Printf("authorizing user...")
+		user, _ := c.Get(AuthKey{})
+		info, authenticated := user.(AuthInfo)
+		if !authenticated || info.User == nil {
+			RedirectToAuth(c)
+			c.Abort()
+			return
+		}
+		for _, capability := range capabilities {
+			if !info.Capabilities.Has(capability) {
+				c.String(http.StatusForbidden, "")
+				c.Abort()
+				return
+			}
+		}
+		log.Printf("user is authorized %v", info)
+
+		c.Next()
 	}
-	c.Next()
 }
 
 func RegisterAuth(r *gin.Engine, q *repository.Queries) {
-	gob.Register(repository.User{})
-	gob.Register(UserKey{})
+	gob.Register(AuthInfo{})
+	gob.Register(AuthKey{})
 	gob.Register(RedirectKey{})
 
 	r.Use(middleware)
@@ -104,14 +128,18 @@ func RegisterAuth(r *gin.Engine, q *repository.Queries) {
 }
 
 func middleware(c *gin.Context) {
-	user, loggedIn := sessions.Default(c).Get(UserKey{}).(repository.User)
-	var userPtr *repository.User = nil
-	if loggedIn {
-		userPtr = &user
+	info, loggedIn := sessions.Default(c).Get(AuthKey{}).(AuthInfo)
+	if !loggedIn {
+		token := c.Request.Header.Get("Authorization")
+		if token != "" {
+			info = authToken(token, repository.GetQueries(c))
+			log.Print(info)
+		}
+
 	}
 
-	core.PushContext(c, UserKey{}, userPtr)
-	c.Set(UserKey{}, userPtr)
+	core.PushContext(c, AuthKey{}, info)
+	c.Set(AuthKey{}, info)
 }
 
 func getUser(q *repository.Queries, gothUser goth.User) (repository.User, bool, error) {
@@ -156,7 +184,9 @@ func complpeteAuth(c *gin.Context, q *repository.Queries) error {
 		return err
 	}
 
-	session.Set(UserKey{}, user)
+	info := AuthInfo{&user, AuthenticatedCapabilities()}
+
+	session.Set(AuthKey{}, info)
 	if err := session.Save(); err != nil {
 		return err
 	}

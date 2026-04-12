@@ -11,10 +11,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createReceipt = `-- name: CreateReceipt :exec
+const createReceipt = `-- name: CreateReceipt :one
 INSERT INTO receipts(user_id, fpd, total, time, optype, place)
 VALUES($1, $2, $3, $4, $5, $6)
-ON CONFLICT DO NOTHING
+RETURNING user_id, fpd, total, time, optype, place
 `
 
 type CreateReceiptParams struct {
@@ -26,8 +26,8 @@ type CreateReceiptParams struct {
 	Place  string
 }
 
-func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) error {
-	_, err := q.db.Exec(ctx, createReceipt,
+func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) (Receipt, error) {
+	row := q.db.QueryRow(ctx, createReceipt,
 		arg.UserID,
 		arg.Fpd,
 		arg.Total,
@@ -35,7 +35,40 @@ func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) er
 		arg.Optype,
 		arg.Place,
 	)
-	return err
+	var i Receipt
+	err := row.Scan(
+		&i.UserID,
+		&i.Fpd,
+		&i.Total,
+		&i.Time,
+		&i.Optype,
+		&i.Place,
+	)
+	return i, err
+}
+
+const createToken = `-- name: CreateToken :one
+INSERT INTO tokens(user_id, token_hash, capabilities)
+VALUES($1, $2, $3)
+RETURNING user_id, token_hash, revoked, capabilities
+`
+
+type CreateTokenParams struct {
+	UserID       pgtype.UUID
+	TokenHash    []byte
+	Capabilities []byte
+}
+
+func (q *Queries) CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error) {
+	row := q.db.QueryRow(ctx, createToken, arg.UserID, arg.TokenHash, arg.Capabilities)
+	var i Token
+	err := row.Scan(
+		&i.UserID,
+		&i.TokenHash,
+		&i.Revoked,
+		&i.Capabilities,
+	)
+	return i, err
 }
 
 const createUser = `-- name: CreateUser :one
@@ -71,6 +104,24 @@ WHERE id = $1
 func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteUser, id)
 	return err
+}
+
+const getToken = `-- name: GetToken :one
+SELECT user_id, token_hash, revoked, capabilities
+FROM tokens
+WHERE token_hash = $1
+`
+
+func (q *Queries) GetToken(ctx context.Context, tokenHash []byte) (Token, error) {
+	row := q.db.QueryRow(ctx, getToken, tokenHash)
+	var i Token
+	err := row.Scan(
+		&i.UserID,
+		&i.TokenHash,
+		&i.Revoked,
+		&i.Capabilities,
+	)
+	return i, err
 }
 
 const getUser = `-- name: GetUser :one

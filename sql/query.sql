@@ -28,13 +28,23 @@ UPDATE users
 SET is_admin = TRUE
 WHERE email = $1;
 
--- name: CreateReceipt :exec
+-- name: CreateReceipt :one
 INSERT INTO receipts(user_id, fpd, total, time, optype, place)
 VALUES($1, $2, $3, $4, $5, $6)
-ON CONFLICT DO NOTHING;
+RETURNING *;
 
 -- name: ListReceipts :many
 SELECT * 
 FROM receipts
 WHERE user_id = $1
 ORDER BY time DESC;
+
+-- name: CreateToken :one 
+INSERT INTO tokens(user_id, token_hash, capabilities)
+VALUES($1, $2, $3)
+RETURNING *;
+
+-- name: GetToken :one
+SELECT *
+FROM tokens
+WHERE token_hash = $1;

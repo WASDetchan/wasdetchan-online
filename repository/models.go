@@ -17,6 +17,13 @@ type Receipt struct {
 	Place  string
 }
 
+type Token struct {
+	UserID       pgtype.UUID
+	TokenHash    []byte
+	Revoked      bool
+	Capabilities []byte
+}
+
 type User struct {
 	ID      pgtype.UUID
 	Name    string
