@@ -1,5 +1,7 @@
 package auth
 
+import "slices"
+
 type Capabilities []Capability
 
 type Capability uint32
@@ -25,12 +27,7 @@ func AuthenticatedCapabilities() Capabilities {
 }
 
 func (cs Capabilities) Has(c Capability) bool {
-	for _, cp := range cs {
-		if c == cp {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(cs, c)
 }
 
 func (cs *Capabilities) ReadBytes(bytes []byte) {
