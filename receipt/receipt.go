@@ -24,10 +24,13 @@ func (d InvalidData) Error() string {
 	return "the qr-code or receipt string contained invalid data"
 }
 
-type OtherError struct{ code int }
+type OtherError struct {
+	status_code int
+	code        int
+}
 
 func (d OtherError) Error() string {
-	return fmt.Sprintf("An error has occured (code %v). Try again later.", d.code)
+	return fmt.Sprintf("An error has occured (code %v, status %v). Try again later.", d.code, d.status_code)
 }
 
 type LocalTime struct {
@@ -126,7 +129,7 @@ func GetReceiptFromString(qrraw string) (*Receipt, string, error) {
 	}
 
 	if base.Code > 1 {
-		return nil, "", OtherError{base.Code}
+		return nil, "", OtherError{resp.StatusCode, base.Code}
 	}
 
 	var data responseData
@@ -159,6 +162,8 @@ type receiptPostResponse struct {
 
 func HandlePostReceipt(c *gin.Context) {
 	qrraw := c.PostForm("qrraw")
+
+	log.Printf("[INFO] Processing receipt \"%v\"", qrraw)
 
 	if qrraw == "" {
 		c.JSON(http.StatusBadRequest, receiptPostResponse{
